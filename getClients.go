@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Ensena/graphql-client"
+	"github.com/Ensena/core/graphql-client"
 	"github.com/elmalba/oauth2-server"
+	"github.com/gin-gonic/gin"
 )
 
 type clientsGraphql struct {
@@ -25,10 +26,12 @@ type clientsGraphql struct {
 	} `json:"data"`
 }
 
-func GetApp(clientID string) (*oauth2.Client, bool) {
+func GetApp(ctx *gin.Context, clientID string) (*oauth2.Client, bool) {
 
 	user := oauth2.Client{}
-
+	if clientID == "" {
+		clientID = "7nywNebh7Q"
+	}
 	g := fmt.Sprintf(`{
 		allApps(condition:{clientId:"%s"}) {
 		  totalCount
@@ -43,7 +46,7 @@ func GetApp(clientID string) (*oauth2.Client, bool) {
 		}
 	  }`, clientID)
 
-	response, err := graphql.Query(g)
+	response, err := graphql.Query(ctx, g)
 	if err != nil {
 		log.Println("ERROR to connect graphql")
 		return &user, false
@@ -58,12 +61,13 @@ func GetApp(clientID string) (*oauth2.Client, bool) {
 	user.CallBackURL = userInput.Data.AllApps.Edges[0].Node.URL
 	user.ClientID = userInput.Data.AllApps.Edges[0].Node.ClientID
 	user.Secret = userInput.Data.AllApps.Edges[0].Node.Secret
+
 	return &user, true
 }
 
-func GetAppAndSecret(clientID, secret string) bool {
+func GetAppAndSecret(ctx *gin.Context, clientID, secret string) bool {
 
-	user, valid := GetApp(clientID)
+	user, valid := GetApp(ctx, clientID)
 	if !valid {
 		return valid
 	}

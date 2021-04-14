@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Ensena/graphql-client"
+	"github.com/Ensena/core/graphql-client"
+	"github.com/gin-gonic/gin"
 )
 
 type outputUser struct {
@@ -52,7 +53,7 @@ type graphqlUserByEmail struct {
 	} `json:"data"`
 }
 
-func GetUser(userID string) []byte {
+func GetUser(ctx *gin.Context, userID string) []byte {
 
 	g := fmt.Sprintf(`{
 		userById(id: %s) {
@@ -65,7 +66,7 @@ func GetUser(userID string) []byte {
 		}
 	  }`, userID)
 
-	response, err := graphql.Query(g)
+	response, err := graphql.Query(ctx, g)
 	if err != nil {
 		return []byte("")
 	}
@@ -77,7 +78,7 @@ func GetUser(userID string) []byte {
 	return out
 }
 
-func GetUserByEmail(email string) (*User, bool) {
+func GetUserByEmail(ctx *gin.Context, email string) (*User, bool) {
 
 	g := fmt.Sprintf(`{
 		allUsers(condition: { email: "%s" }) {
@@ -97,7 +98,7 @@ func GetUserByEmail(email string) (*User, bool) {
 	  }
 	  `, email)
 
-	response, err := graphql.Query(g)
+	response, err := graphql.Query(ctx, g)
 	if err != nil {
 		return &User{}, false
 	}

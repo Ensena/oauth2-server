@@ -3,10 +3,11 @@ package oauth2
 import (
 	"fmt"
 
-	"github.com/Ensena/graphql-client"
+	"github.com/Ensena/core/graphql-client"
+	"github.com/gin-gonic/gin"
 )
 
-func createUser(user *User) {
+func createUser(ctx *gin.Context, user *User) {
 
 	g := fmt.Sprintf(`mutation MyMutation {
 		__typename
@@ -14,6 +15,6 @@ func createUser(user *User) {
 		  clientMutationId
 		}
 	  }`, user.LastName, user.Name, user.Email)
-	graphql.Query(g)
+	graphql.Query(ctx, g)
 
 }

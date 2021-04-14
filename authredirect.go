@@ -2,23 +2,20 @@ package oauth2
 
 import (
 	"fmt"
-	"net/http"
+	"log"
 
 	"github.com/elmalba/oauth2-server"
+	"github.com/gin-gonic/gin"
 )
 
-func AuthMiddleWare(w http.ResponseWriter, r *http.Request, s *oauth2.Session) string {
+func AuthMiddleWare(ctx *gin.Context, s *oauth2.Session) string {
+	log.Println("SS", s)
 	if s.ID == 0 {
-		s.Save(w, r)
-		http.Redirect(w, r, basePath+"/login", 303)
+		s.Save(ctx)
+		ctx.Redirect(303, basePath+"/login")
 		return ""
 
 	}
-	if s.ClientID == "" {
-		s.Save(w, r)
-		http.Redirect(w, r, basePath+"/login", 303)
-		return ""
 
-	}
 	return fmt.Sprintf("%d", s.ID)
 }

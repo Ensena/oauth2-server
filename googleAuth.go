@@ -13,8 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Ensena/env-global"
+	"github.com/Ensena/core/env-global"
 	oauth2Server "github.com/elmalba/oauth2-server"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -55,8 +56,10 @@ var googleOauthConfig = &oauth2.Config{
 
 const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
-func OauthGoogleLogin(w http.ResponseWriter, r *http.Request) {
+func OauthGoogleLogin(ctx *gin.Context) {
 
+	r := ctx.Request
+	w := ctx.Writer
 	oauthState := generateStateOauthCookie(w)
 	uri, err := url.Parse(r.Header.Get("Referer"))
 	if err != nil {
@@ -76,7 +79,9 @@ func redirect(w http.ResponseWriter, r *http.Request, id int, valid bool) {
 
 }
 
-func OauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
+func OauthGoogleCallback(ctx *gin.Context) {
+	r := ctx.Request
+	w := ctx.Writer
 	// Read oauthState from Cookie
 	oauthState, _ := r.Cookie("oauthstate")
 
@@ -103,27 +108,27 @@ func OauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, exist := GetUserByEmail(Guser.Email)
+	user, exist := GetUserByEmail(ctx, Guser.Email)
 
 	if exist == false {
 		if strings.Contains(Guser.Email, "@mail.udp.cl") || strings.Contains(Guser.Email, "@uft.edu") {
 			user = &User{}
-			user.Email = strings.Title(strings.ToLower(Guser.Email))
+			user.Email = strings.ToLower(Guser.Email)
 			user.Name = strings.Title(strings.ToLower(Guser.GivenName))
 			user.LastName = strings.Title(strings.ToLower(Guser.FamilyName))
-			createUser(user)
-			user, _ = GetUserByEmail(Guser.Email)
+			createUser(ctx, user)
+			user, _ = GetUserByEmail(ctx, Guser.Email)
 		} else {
 			return
 		}
 	}
 
 	s := oauth2Server.Session{}
-	s.Load(w, r)
+	s.Load(ctx)
 
 	s.ID = user.ID
 	s.Email = user.Email
-	s.Save(w, r)
+	s.Save(ctx)
 	http.Redirect(w, r, basePath+"/auth", http.StatusTemporaryRedirect)
 	return
 
